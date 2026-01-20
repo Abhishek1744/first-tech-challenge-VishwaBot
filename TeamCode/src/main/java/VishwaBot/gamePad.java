@@ -1,16 +1,13 @@
 package VishwaBot;
 
-
-
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 @TeleOp
 public class gamePad extends OpMode {
 
     @Override
     public void init() {
-
     }
 
     @Override
@@ -18,7 +15,7 @@ public class gamePad extends OpMode {
 
         double speedForward = -gamepad1.left_stick_y / 2.0;
         double diffXJoysticks = gamepad1.left_stick_x - gamepad1.right_stick_x;
-        double sumtriggeres = gamepad1.left_trigger + gamepad1.right_trigger;
+        double sumTriggers = gamepad1.left_trigger + gamepad1.right_trigger;
 
         telemetry.addData("left x", gamepad1.left_stick_x);
         telemetry.addData("left y", speedForward);
@@ -28,15 +25,6 @@ public class gamePad extends OpMode {
 
         telemetry.addData("a button", gamepad1.a);
         telemetry.addData("b button", gamepad1.b);
-
         telemetry.addData("sum triggers", sumTriggers);
-
-
     }
-    /*
-    1. add telemetry for the right joystick
-    2. add telemetry for the B button
-    3. add telemetry to report the DIFFERENCE between X left joystick and x right joystick.
-    4. add telemetry data to report the sum of both rear triggers.
-     */
 }
