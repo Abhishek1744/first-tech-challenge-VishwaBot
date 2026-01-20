@@ -5,7 +5,6 @@ package VishwaBot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-@Disabled
 @TeleOp
 public class gamePad extends OpMode {
 
@@ -25,7 +24,7 @@ public class gamePad extends OpMode {
         telemetry.addData("left y", speedForward);
         telemetry.addData("right x", gamepad1.right_stick_x);
         telemetry.addData("right y", gamepad1.right_stick_y);
-        telemetry.addData("difference x", diffXJoysticks;
+        telemetry.addData("difference x", diffXJoysticks);
 
         telemetry.addData("a button", gamepad1.a);
         telemetry.addData("b button", gamepad1.b);
