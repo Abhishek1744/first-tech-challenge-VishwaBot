@@ -58,12 +58,13 @@ public class TurningOfBot extends OpMode {
     @Override
     public void loop() {
 
-        double drive  = -gamepad1.left_stick_x;
-        double strafe =  gamepad1.left_stick_y;
+        double drive  = -gamepad1.left_stick_y;
+        double strafe =  gamepad1.left_stick_x;
+        double turn = gamepad1.right_stick_x;
 
-        leftFront.setPower(drive + strafe);
-        rightFront.setPower(drive - strafe);
-        leftBack.setPower(drive - strafe);
-        rightBack.setPower(drive + strafe);
+        leftFront.setPower(drive + strafe + turn);
+        rightFront.setPower(drive - strafe - turn);
+        leftBack.setPower(drive - strafe + turn);
+        rightBack.setPower(drive + strafe - turn);
     }
 }
