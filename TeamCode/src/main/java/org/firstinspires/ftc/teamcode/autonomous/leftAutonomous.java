@@ -1,29 +1,30 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@Autonomous(name = "Basic Autonomous", group = "Autonomous")
-public class BasicAutonomous extends LinearOpMode {
+@Autonomous(name = "Left Autonomous", group = "Autonomous")
+
+public class leftAutonomous extends LinearOpMode{
 
     DcMotor leftFront, leftBack, rightFront, rightBack;
-
-    // Tune this value on-field
     private static final int TURN_45_TIME_MS = 450;
+    private static final int TURN_180_TIME_MS = 1800;
+    private static final int TURN_90_TIME_MS = 900;
+
 
     @Override
-    public void runOpMode() {
-
-        // Hardware mapping
+    public void runOpMode(){
         leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
         leftBack   = hardwareMap.get(DcMotor.class, "leftBack");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack  = hardwareMap.get(DcMotor.class, "rightBack");
 
         // Reverse one side
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack.setDirection(DcMotor.Direction.REVERSE);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        rightBack.setDirection(DcMotor.Direction.REVERSE);
 
         telemetry.addLine("Autonomous Ready");
         telemetry.update();
@@ -62,13 +63,25 @@ public class BasicAutonomous extends LinearOpMode {
 
             // Strafe left
             strafeLeft(0.5);
-            sleep(3000);
+            sleep(1000);
             stopDrive();
 
-            sleep(300);
+            driveForward(0.5);
+            sleep(2000);
+            stopDrive();
 
-            turnLeft(0.5);
-            sleep(TURN_45_TIME_MS);
+            // 🔄 45-degree right turn
+            turnRight(-0.5);
+            sleep(TURN_90_TIME_MS);
+            stopDrive();
+
+            driveForward(0.5);
+            sleep(1000);
+            stopDrive();
+
+            // 🔄 45-degree right turn
+            turnRight(0.5);
+            sleep(TURN_180_TIME_MS);
             stopDrive();
         }
     }
@@ -115,8 +128,6 @@ public class BasicAutonomous extends LinearOpMode {
         rightFront.setPower(power);
         rightBack.setPower(power);
     }
-
-
     private void stopDrive() {
         leftFront.setPower(0);
         leftBack.setPower(0);

@@ -12,15 +12,29 @@ public class MeepMeepTesting {
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
+                .setConstraints(35, 35, Math.toRadians(180), Math.toRadians(180), 15)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(0, 60, Math.toRadians(270)))
-                .splineToSplineHeading(new Pose2d(40, 0, Math.toRadians(180)), Math.toRadians(270))
-                .splineToConstantHeading(new Vector2d(40, -48), Math.toRadians(0))
-                .lineToXLinearHeading(0, Math.toRadians(90))
-                .build());
-
+        //myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-35, -35, Math.toRadians(90)))
+      //          .splineToSplineHeading(new Pose2d(30, 35, Math.toRadians(90)), Math.toRadians(90))
+    //            .splineToConstantHeading(new Vector2d(-40, -48), Math.toRadians(0))
+  //              .lineToXLinearHeading(0, Math.toRadians(90))
+//                .build());
+        myBot.runAction(
+                myBot.getDrive().actionBuilder(new Pose2d(-35, -35, Math.toRadians(90))) // facing +Y
+                        .lineToY(35)                     // go straight forward
+                        .turn(Math.toRadians(-90))      // turn to face +X
+                        .lineToX(0)
+                        .turn(Math.toRadians(45))
+                        .lineToX(20)
+                        .turn(Math.toRadians(-120))
+                        .lineToY(56)
+                        .lineToX(25)
+                        .lineToY(-13)
+                        .turn(Math.toRadians(75))
+                        .lineToX(56)
+                        .build()
+        );
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_POWERPLAY_OFFICIAL)
                 .setDarkMode(true)
