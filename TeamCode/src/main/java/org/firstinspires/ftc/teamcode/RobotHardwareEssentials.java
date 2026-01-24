@@ -6,10 +6,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class RobotHardwareEssentials {
 
     // Drive motors
-    public DcMotor motorLeftFront;
-    public DcMotor motorLeftBack;
-    public DcMotor motorRightFront;
-    public DcMotor motorRightBack;
+    public DcMotor leftFront;
+    public DcMotor leftBack;
+    public DcMotor rightFront;
+    public DcMotor rightBack;
 
     // Encoders (2 only)
     public DcMotor encoderLeft;
@@ -41,29 +41,29 @@ public class RobotHardwareEssentials {
 
     public RobotHardwareEssentials(HardwareMap hwMap) {
 
-        motorLeftFront  = hwMap.get(DcMotor.class, "motorLeftFront");
-        motorLeftBack   = hwMap.get(DcMotor.class, "motorLeftBack");
-        motorRightFront = hwMap.get(DcMotor.class, "motorRightFront");
-        motorRightBack  = hwMap.get(DcMotor.class, "motorRightBack");
+        leftFront  = hwMap.get(DcMotor.class, "leftFront");
+        leftBack   = hwMap.get(DcMotor.class, "leftBack");
+        rightFront = hwMap.get(DcMotor.class, "rightFront");
+        rightBack  = hwMap.get(DcMotor.class, "rightBack");
 
-        motorLeftFront.setDirection(DcMotor.Direction.FORWARD);
-        motorLeftBack.setDirection(DcMotor.Direction.FORWARD);
-        motorRightFront.setDirection(DcMotor.Direction.REVERSE);
-        motorRightBack.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.FORWARD);
+        leftBack.setDirection(DcMotor.Direction.FORWARD);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        rightBack.setDirection(DcMotor.Direction.REVERSE);
 
-        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorLeftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorRightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        motorLeftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorRightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Assign encoders
-        encoderLeft = motorLeftBack;
-        encoderRight = motorRightBack;
+        encoderLeft = leftBack;
+        encoderRight = rightBack;
 
         resetEncoders();
     }
@@ -77,10 +77,10 @@ public class RobotHardwareEssentials {
         double rf = drive + strafe + turn;
         double rb = drive - strafe + turn;
 
-        motorLeftFront.setPower(lf);
-        motorLeftBack.setPower(lb);
-        motorRightFront.setPower(rf);
-        motorRightBack.setPower(rb);
+        leftFront.setPower(lf);
+        leftBack.setPower(lb);
+        rightFront.setPower(rf);
+        rightBack.setPower(rb);
     }
 
     public void stop() {
@@ -90,11 +90,11 @@ public class RobotHardwareEssentials {
     // ---------------- ENCODERS ----------------
 
     public void resetEncoders() {
-        motorLeftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         lastLeftPos = 0;
         lastRightPos = 0;
