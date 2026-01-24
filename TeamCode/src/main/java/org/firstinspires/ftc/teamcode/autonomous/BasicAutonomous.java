@@ -22,8 +22,8 @@ public class BasicAutonomous extends LinearOpMode {
         rightBack  = hardwareMap.get(DcMotor.class, "rightBack");
 
         // Reverse one side
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setDirection(DcMotor.Direction.REVERSE);
 
         telemetry.addLine("Autonomous Ready");
         telemetry.update();
@@ -64,6 +64,12 @@ public class BasicAutonomous extends LinearOpMode {
             strafeLeft(0.5);
             sleep(3000);
             stopDrive();
+
+            sleep(300);
+
+            turnLeft(0.5);
+            sleep(TURN_45_TIME_MS);
+            stopDrive();
         }
     }
 
@@ -103,6 +109,13 @@ public class BasicAutonomous extends LinearOpMode {
         rightFront.setPower(-power);
         rightBack.setPower(-power);
     }
+    private void turnLeft(double power) {
+        leftFront.setPower(-power);
+        leftBack.setPower(-power);
+        rightFront.setPower(power);
+        rightBack.setPower(power);
+    }
+
 
     private void stopDrive() {
         leftFront.setPower(0);
