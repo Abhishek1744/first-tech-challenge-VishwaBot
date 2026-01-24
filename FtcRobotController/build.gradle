@@ -26,5 +26,4 @@ android {
     }
     namespace = 'com.qualcomm.ftcrobotcontroller'
 }
-
 apply from: '../build.dependencies.gradle'
