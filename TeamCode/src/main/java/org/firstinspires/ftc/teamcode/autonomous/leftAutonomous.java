@@ -39,50 +39,6 @@ public class leftAutonomous extends LinearOpMode{
             stopDrive();
 
             sleep(300);
-
-            // Strafe right
-            strafeRight(0.8);
-            sleep(1500);
-            stopDrive();
-
-            sleep(300);
-
-            // 🔄 45-degree right turn
-            turnRight(0.5);
-            sleep(TURN_45_TIME_MS);
-            stopDrive();
-
-            sleep(300);
-
-            // Backward
-            driveBackward(1.0);
-            sleep(200);
-            stopDrive();
-
-            sleep(300);
-
-            // Strafe left
-            strafeLeft(0.5);
-            sleep(1000);
-            stopDrive();
-
-            driveForward(0.5);
-            sleep(2000);
-            stopDrive();
-
-            // 🔄 45-degree right turn
-            turnRight(-0.5);
-            sleep(TURN_90_TIME_MS);
-            stopDrive();
-
-            driveForward(0.5);
-            sleep(1000);
-            stopDrive();
-
-            // 🔄 45-degree right turn
-            turnRight(0.5);
-            sleep(TURN_180_TIME_MS);
-            stopDrive();
         }
     }
 

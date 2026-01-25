@@ -7,39 +7,32 @@ import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
+
     public static void main(String[] args) {
+
         MeepMeep meepMeep = new MeepMeep(800);
 
-        RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
-                // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(35, 35, Math.toRadians(180), Math.toRadians(180), 15)
+        RoadRunnerBotEntity bot = new DefaultBotBuilder(meepMeep)
+                .setDimensions(17, 17)
+                .setConstraints(
+                        60, 60,
+                        Math.toRadians(180),
+                        Math.toRadians(180),
+                        13.5
+                )
                 .build();
 
-        //myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-35, -35, Math.toRadians(90)))
-      //          .splineToSplineHeading(new Pose2d(30, 35, Math.toRadians(90)), Math.toRadians(90))
-    //            .splineToConstantHeading(new Vector2d(-40, -48), Math.toRadians(0))
-  //              .lineToXLinearHeading(0, Math.toRadians(90))
-//                .build());
-        myBot.runAction(
-                myBot.getDrive().actionBuilder(new Pose2d(-35, -35, Math.toRadians(90))) // facing +Y
-                        .lineToY(35)                     // go straight forward
-                        .turn(Math.toRadians(-90))      // turn to face +X
-                        .lineToX(0)
-                        .turn(Math.toRadians(45))
-                        .lineToX(20)
-                        .turn(Math.toRadians(-120))
-                        .lineToY(56)
-                        .lineToX(25)
-                        .lineToY(-13)
-                        .turn(Math.toRadians(75))
-                        .lineToX(56)
-                        .build()
-        );
+        bot.runAction(bot.getDrive().actionBuilder(new Pose2d(-56, -34, Math.toRadians(90)))
+                // ---- CURVED PATH LIKE YOUR IMAGE ----
+                .splineTo(new Vector2d(-54, -20), Math.toRadians(90))
+                .splineTo(new Vector2d(-52, -5), Math.toRadians(90))
+                .splineTo(new Vector2d(-50, 10), Math.toRadians(90))
+                .splineTo(new Vector2d(-48, 25), Math.toRadians(90))
+                .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_POWERPLAY_OFFICIAL)
                 .setDarkMode(true)
-                .setBackgroundAlpha(0.95f)
-                .addEntity(myBot)
+                .addEntity(bot)
                 .start();
     }
 }
