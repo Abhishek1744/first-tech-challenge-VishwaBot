@@ -20,13 +20,13 @@ public class RobotHardwareEssentials {
 
     // ---------------- CONSTANTS ----------------
 
-    // Odometry wheel + encoder constants (4-Bar Mini Odometry Pod, 32mm wheel)
+    // 32mm odometry wheel, 8192 CPR
     public static final double ODO_WHEEL_DIAMETER_MM = 32.0;
     public static final double ODO_TICKS_PER_REV = 8192.0;
     public static final double ODO_MM_PER_TICK =
             (Math.PI * ODO_WHEEL_DIAMETER_MM) / ODO_TICKS_PER_REV;
 
-    // Pod offsets from robot center (in encoder ticks). Update these after measuring.
+    // Update after physical measurement
     public static final double PAR_Y_TICKS = 0.0;
     public static final double PERP_X_TICKS = 0.0;
 
@@ -56,21 +56,20 @@ public class RobotHardwareEssentials {
         rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        // Pinpoint device (I2C)
-        // TODO: ensure your config has a Pinpoint device named "pinpoint"
+        // Pinpoint device
         pinpoint = hwMap.get(GoBildaPinpointDriver.class, "pinpoint");
         pinpoint.setEncoderResolution(1 / ODO_MM_PER_TICK, DistanceUnit.MM);
-        pinpoint.setOffsets(ODO_MM_PER_TICK * PAR_Y_TICKS, ODO_MM_PER_TICK * PERP_X_TICKS, DistanceUnit.MM);
+        pinpoint.setOffsets(
+                ODO_MM_PER_TICK * PAR_Y_TICKS,
+                ODO_MM_PER_TICK * PERP_X_TICKS,
+                DistanceUnit.MM
+        );
         pinpoint.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
                 GoBildaPinpointDriver.EncoderDirection.FORWARD
         );
-        pinpoint.resetPosAndIMU();
-        // Assign encoders
-        encoderLeft = leftBack;
-        encoderRight = rightBack;
 
-        resetEncoders();
+        pinpoint.resetPosAndIMU();
     }
 
     // ---------------- DRIVE ----------------
@@ -92,24 +91,11 @@ public class RobotHardwareEssentials {
         setDrivePower(0, 0, 0);
     }
 
-    // ---------------- PINPOINT ODOMETRY (X/Y) ----------------
-    // ---------------- ENCODERS ----------------
-
-    public void resetEncoders() {
-        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        lastLeftPos = 0;
-        lastRightPos = 0;
-    }
-
-    // ---------------- 2-ENCODER ODOMETRY ----------------
+    // ---------------- PINPOINT ODOMETRY ----------------
 
     public void updateOdometry() {
         pinpoint.update();
+
         if (pinpoint.getDeviceStatus() != GoBildaPinpointDriver.DeviceStatus.READY) {
             return;
         }
