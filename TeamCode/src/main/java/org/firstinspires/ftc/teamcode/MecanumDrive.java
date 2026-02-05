@@ -77,6 +77,11 @@ public final class MecanumDrive {
         public double lateralInPerTick = inPerTick;
         public double trackWidthTicks = 0;
 
+        // odometry (Pinpoint) parameters
+        public boolean usePinpoint = true;
+        // 32mm odometry wheel, 8192 ticks/rev => ~0.000483 in/tick
+        public double pinpointInPerTick = 0.0004831436;
+
         // feedforward parameters (in tick units)
         public double kS = 0;
         public double kV = 0;
@@ -255,7 +260,9 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new DriveLocalizer(pose);
+        localizer = PARAMS.usePinpoint
+                ? new PinpointLocalizer(hardwareMap, PARAMS.pinpointInPerTick, pose)
+                : new DriveLocalizer(pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }

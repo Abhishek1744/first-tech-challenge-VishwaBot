@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 public class RobotHardwareEssentials {
 
@@ -11,29 +15,20 @@ public class RobotHardwareEssentials {
     public DcMotor motorRightFront;
     public DcMotor motorRightBack;
 
-    // Encoders (2 only)
-    public DcMotor encoderLeft;
-    public DcMotor encoderRight;
+    // Pinpoint (I2C) odometry
+    public GoBildaPinpointDriver pinpoint;
 
     // ---------------- CONSTANTS ----------------
 
-    // Distance between left and right wheels (cm)
-    public static final double TRACK_WIDTH_CM = 38.0;
+    // Odometry wheel + encoder constants (4-Bar Mini Odometry Pod, 32mm wheel)
+    public static final double ODO_WHEEL_DIAMETER_MM = 32.0;
+    public static final double ODO_TICKS_PER_REV = 8192.0;
+    public static final double ODO_MM_PER_TICK =
+            (Math.PI * ODO_WHEEL_DIAMETER_MM) / ODO_TICKS_PER_REV;
 
-    // Wheel radius (cm)
-    public static final double WHEEL_RADIUS_CM = 5.2;
-
-    // Encoder ticks per revolution
-    public static final double TICKS_PER_REV = 8192.0;
-
-    // cm per encoder tick
-    public static final double CM_PER_TICK =
-            (2 * Math.PI * WHEEL_RADIUS_CM) / TICKS_PER_REV;
-
-    // ---------------- ODOMETRY STATE ----------------
-
-    private int lastLeftPos = 0;
-    private int lastRightPos = 0;
+    // Pod offsets from robot center (in encoder ticks). Update these after measuring.
+    public static final double PAR_Y_TICKS = 0.0;
+    public static final double PERP_X_TICKS = 0.0;
 
     public XyhVector pos = new XyhVector(0, 0, 0);
 
@@ -61,11 +56,16 @@ public class RobotHardwareEssentials {
         motorRightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorRightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        // Assign encoders
-        encoderLeft = motorLeftBack;
-        encoderRight = motorRightBack;
-
-        resetEncoders();
+        // Pinpoint device (I2C)
+        // TODO: ensure your config has a Pinpoint device named "pinpoint"
+        pinpoint = hwMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint.setEncoderResolution(1 / ODO_MM_PER_TICK, DistanceUnit.MM);
+        pinpoint.setOffsets(ODO_MM_PER_TICK * PAR_Y_TICKS, ODO_MM_PER_TICK * PERP_X_TICKS, DistanceUnit.MM);
+        pinpoint.setEncoderDirections(
+                GoBildaPinpointDriver.EncoderDirection.FORWARD,
+                GoBildaPinpointDriver.EncoderDirection.FORWARD
+        );
+        pinpoint.resetPosAndIMU();
     }
 
     // ---------------- DRIVE ----------------
@@ -87,42 +87,16 @@ public class RobotHardwareEssentials {
         setDrivePower(0, 0, 0);
     }
 
-    // ---------------- ENCODERS ----------------
-
-    public void resetEncoders() {
-        motorLeftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        motorLeftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motorRightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        lastLeftPos = 0;
-        lastRightPos = 0;
-    }
-
-    // ---------------- 2-ENCODER ODOMETRY ----------------
+    // ---------------- PINPOINT ODOMETRY (X/Y) ----------------
 
     public void updateOdometry() {
+        pinpoint.update();
+        if (pinpoint.getDeviceStatus() != GoBildaPinpointDriver.DeviceStatus.READY) {
+            return;
+        }
 
-        int leftPos = encoderLeft.getCurrentPosition();
-        int rightPos = encoderRight.getCurrentPosition();
-
-        int dLeft = leftPos - lastLeftPos;
-        int dRight = rightPos - lastRightPos;
-
-        lastLeftPos = leftPos;
-        lastRightPos = rightPos;
-
-        double leftDist = dLeft * CM_PER_TICK;
-        double rightDist = dRight * CM_PER_TICK;
-
-        double dTheta = (rightDist - leftDist) / TRACK_WIDTH_CM;
-        double dCenter = (rightDist + leftDist) / 2.0;
-
-        double headingMid = pos.h + dTheta / 2.0;
-
-        pos.x += dCenter * Math.cos(headingMid);
-        pos.y += dCenter * Math.sin(headingMid);
-        pos.h += dTheta;
+        pos.x = pinpoint.getPosX(DistanceUnit.CM);
+        pos.y = pinpoint.getPosY(DistanceUnit.CM);
+        pos.h = pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS);
     }
 }
