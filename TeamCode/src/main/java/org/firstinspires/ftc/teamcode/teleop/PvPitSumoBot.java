@@ -181,8 +181,8 @@ public class PvPitSumoBot extends LinearOpMode {
                     }
                 }
             } else {
-                strafeCmd = gamepad1.left_stick_y * MANUAL_SPEED_SCALE;
-                forwardCmd = -gamepad1.left_stick_x * MANUAL_SPEED_SCALE;
+                strafeCmd = gamepad1.left_stick_x * MANUAL_SPEED_SCALE;
+                forwardCmd = -gamepad1.left_stick_y * MANUAL_SPEED_SCALE;
                 turnCmd = gamepad1.right_stick_x * MANUAL_SPEED_SCALE;
 
                 if (recordingActive && recordedCommands.size() < MAX_RECORDED_SAMPLES) {
