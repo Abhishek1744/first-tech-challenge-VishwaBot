@@ -66,6 +66,17 @@ public class TurningOfBot extends OpMode {
         rightFront.setPower(drive - strafe - turn);
         leftBack.setPower(drive - strafe + turn);
         rightBack.setPower(drive + strafe - turn);
+
+        double max = Math.max(1.0,
+                Math.max(Math.abs(lf),
+                        Math.max(Math.abs(rf),
+                                Math.max(Math.abs(lb), Math.abs(rb)))));
+
+
+        leftFront.setPower(lf / max);
+        rightBack.setPower(rb / max);
+        leftBack.setPower(lb / max);
+        rightFront.setPower(rf / max);
     }
 
 }
