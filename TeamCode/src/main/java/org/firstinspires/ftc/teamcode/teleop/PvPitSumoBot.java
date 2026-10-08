@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @TeleOp(name = "Pvpit Sumo Bot", group = "TeleOp")
+@Disabled
 public class PvPitSumoBot extends LinearOpMode {
 
     private static final double POSITION_KP = 0.04;
@@ -181,8 +183,8 @@ public class PvPitSumoBot extends LinearOpMode {
                     }
                 }
             } else {
-                strafeCmd = gamepad1.left_stick_x * MANUAL_SPEED_SCALE;
-                forwardCmd = gamepad1.left_stick_y * MANUAL_SPEED_SCALE;
+                strafeCmd = -gamepad1.left_stick_y * MANUAL_SPEED_SCALE;
+                forwardCmd = gamepad1.left_stick_x * MANUAL_SPEED_SCALE;
                 turnCmd = gamepad1.right_stick_x * MANUAL_SPEED_SCALE;
 
                 if (recordingActive && recordedCommands.size() < MAX_RECORDED_SAMPLES) {

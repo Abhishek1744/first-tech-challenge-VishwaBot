@@ -3,10 +3,12 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.dfrobot.HuskyLens;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "HuskyLens Dashboard Test", group = "Test")
+@Disabled
 public class cameraCode extends OpMode {
 
     private HuskyLens huskyLens;
@@ -14,7 +16,7 @@ public class cameraCode extends OpMode {
 
     @Override
     public void init() {
-        huskyLens = hardwareMap.get(HuskyLens.class, "husky");
+        huskyLens = hardwareMap.get(HuskyLens.class, "huskyLens");
         dashboard = FtcDashboard.getInstance();
 
         telemetry.addLine("HuskyLens Initialized");
