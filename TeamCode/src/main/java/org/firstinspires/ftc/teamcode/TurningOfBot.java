@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,6 +41,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 //    }
 //}
 @TeleOp(name = "Turning Of Bot")
+@Disabled
 public class TurningOfBot extends OpMode {
 
     DcMotor leftFront, rightFront, leftBack, rightBack;
