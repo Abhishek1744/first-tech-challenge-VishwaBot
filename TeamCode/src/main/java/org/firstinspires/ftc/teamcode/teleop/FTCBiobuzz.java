@@ -171,34 +171,22 @@ public class FTCBiobuzz extends LinearOpMode {
         );
 
         // -------------------------
-        // Motor directions
+        // Motor directions - Realigned with project standard (right side reversed)
         // -------------------------
 
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-
+        leftFront.setDirection(DcMotor.Direction.FORWARD);
         leftBack.setDirection(DcMotor.Direction.FORWARD);
-        rightBack.setDirection(DcMotor.Direction.FORWARD);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        rightBack.setDirection(DcMotor.Direction.REVERSE);
 
         // -------------------------
         // Brake
         // -------------------------
 
-        leftFront.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
-
-        leftBack.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
-
-        rightFront.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
-
-        rightBack.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // -------------------------
         // Motor modes
@@ -213,11 +201,7 @@ public class FTCBiobuzz extends LinearOpMode {
         // Pinpoint
         // -------------------------
 
-        pinpoint.setEncoderResolution(
-                1.0 / ODO_MM_PER_TICK,
-                DistanceUnit.MM
-        );
-
+        pinpoint.setEncoderResolution(1.0 / ODO_MM_PER_TICK, DistanceUnit.MM);
         pinpoint.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
                 GoBildaPinpointDriver.EncoderDirection.FORWARD
@@ -235,9 +219,7 @@ public class FTCBiobuzz extends LinearOpMode {
         // HuskyLens
         // -------------------------
 
-        huskyLens.selectAlgorithm(
-                HuskyLens.Algorithm.TAG_RECOGNITION
-        );
+        huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
 
         telemetry.addLine("Testing 2027 Field Oriented Ready");
         telemetry.addLine("");
@@ -250,9 +232,6 @@ public class FTCBiobuzz extends LinearOpMode {
         telemetry.addLine("B = Servo");
         telemetry.addLine("X = Record");
         telemetry.addLine("Y = Reverse Replay");
-        telemetry.addLine("");
-        telemetry.addLine("AprilTag 4 = Forward");
-        telemetry.addLine("AprilTag 5 = Turn");
         telemetry.update();
 
         waitForStart();
@@ -268,90 +247,31 @@ public class FTCBiobuzz extends LinearOpMode {
         while (opModeIsActive()) {
 
             pinpoint.update();
-
-            // -------------------------
-            // Button handling
-            // -------------------------
-
             handleButtons();
 
-            // -------------------------
-            // AprilTag
-            // -------------------------
+            // Prioritize AprilTag actions, then specialized states, then TeleOp
+            boolean tagAction = handleAprilTags();
 
-            boolean aprilTagAction = handleAprilTags();
+            if (!tagAction) {
+                if (autoReturning) {
+                    DriveCommand autoCommand = calculateAutoReturn();
+                    applyDriveCommand(autoCommand.forward, autoCommand.strafe, autoCommand.turn);
+                } else if (replaying) {
+                    playRecordedPath();
+                } else {
+                    // Normal Driver Control
+                    DriveCommand command = getDriverCommand();
+                    applyDriveCommand(command.forward, command.strafe, command.turn);
 
-            // -------------------------
-            // Auto Return
-            // -------------------------
-
-            if (!aprilTagAction && autoReturning) {
-
-                DriveCommand autoCommand =
-                        calculateAutoReturn();
-
-                applyDriveCommand(
-                        autoCommand.forward,
-                        autoCommand.strafe,
-                        autoCommand.turn
-                );
+                    if (recording) {
+                        recordCommand(command);
+                    }
+                }
             }
-
-            // -------------------------
-            // Replay
-            // -------------------------
-
-            else if (!aprilTagAction && replaying) {
-
-                playRecordedPath();
-            }
-
-            // -------------------------
-            // Recording
-            // -------------------------
-
-            else if (!aprilTagAction && recording) {
-
-                DriveCommand command =
-                        getDriverCommand();
-
-                applyDriveCommand(
-                        command.forward,
-                        command.strafe,
-                        command.turn
-                );
-
-                recordCommand(command);
-            }
-
-            // -------------------------
-            // Normal TeleOp
-            // -------------------------
-
-            else if (!aprilTagAction && !autoReturning && !replaying) {
-
-                DriveCommand command =
-                        getDriverCommand();
-
-                applyDriveCommand(
-                        command.forward,
-                        command.strafe,
-                        command.turn
-                );
-            }
-
-            // -------------------------
-            // Telemetry
-            // -------------------------
 
             updateTelemetry();
-
             idle();
         }
-
-        // =========================
-        // STOP
-        // =========================
 
         stopRobot();
     }
@@ -362,115 +282,46 @@ public class FTCBiobuzz extends LinearOpMode {
 
     private DriveCommand getDriverCommand() {
 
-        // -------------------------
-        // Raw joystick input
-        // -------------------------
-
-        double forward =
-                -gamepad1.left_stick_y
-                        * DRIVE_SPEED_SCALE;
-
-        double strafe =
-                -gamepad1.right_stick_y
-                        * DRIVE_SPEED_SCALE;
-
-        double turn =
-                gamepad1.right_stick_x
-                        * TURN_SPEED_SCALE;
+        double forward = -gamepad1.left_stick_y * DRIVE_SPEED_SCALE;
+        double strafe = -gamepad1.right_stick_y * DRIVE_SPEED_SCALE;
+        double turn = gamepad1.right_stick_x * TURN_SPEED_SCALE;
 
         forward = applyDeadzone(forward);
         strafe = applyDeadzone(strafe);
         turn = applyDeadzone(turn);
 
-        // ========================================================
-        // FIELD ORIENTED TRANSFORMATION
-        // ========================================================
-
         if (FIELD_ORIENTED) {
+            double heading = pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS);
+            double cos = Math.cos(heading);
+            double sin = Math.sin(heading);
 
-            double heading =
-                    pinpoint.getHeading(
-                            UnnormalizedAngleUnit.RADIANS
-                    );
-
-            double cosHeading = Math.cos(heading);
-            double sinHeading = Math.sin(heading);
-
-            double robotForward =
-                    forward * cosHeading
-                            + strafe * sinHeading;
-
-            double robotStrafe =
-                    -forward * sinHeading
-                            + strafe * cosHeading;
+            double robotForward = forward * cos + strafe * sin;
+            double robotStrafe = -forward * sin + strafe * cos;
 
             forward = robotForward;
             strafe = robotStrafe;
         }
 
-        return new DriveCommand(
-                forward,
-                strafe,
-                turn
-        );
+        return new DriveCommand(forward, strafe, turn);
     }
 
     // ============================================================
     // DRIVE
     // ============================================================
 
-    private void applyDriveCommand(
-            double forward,
-            double strafe,
-            double turn
-    ) {
+    private void applyDriveCommand(double forward, double strafe, double turn) {
 
-        double leftFrontPower =
-                forward + strafe + turn;
+        double lf = forward + strafe + turn;
+        double lb = forward - strafe + turn;
+        double rf = forward - strafe - turn;
+        double rb = forward + strafe - turn;
 
-        double leftBackPower =
-                forward - strafe + turn;
+        double max = Math.max(1.0, Math.max(Math.abs(lf), Math.max(Math.abs(lb), Math.max(Math.abs(rf), Math.abs(rb)))));
 
-        double rightFrontPower =
-                forward - strafe - turn;
-
-        double rightBackPower =
-                forward + strafe - turn;
-
-        double denominator = Math.max(
-                1.0,
-                Math.max(
-                        Math.abs(leftFrontPower),
-                        Math.max(
-                                Math.abs(leftBackPower),
-                                Math.max(
-                                        Math.abs(rightFrontPower),
-                                        Math.abs(rightBackPower)
-                                )
-                        )
-                )
-        );
-
-        leftFrontPower /= denominator;
-        leftBackPower /= denominator;
-        rightFrontPower /= denominator;
-        rightBackPower /= denominator;
-
-        leftFront.setPower(
-                Range.clip(leftFrontPower, -1.0, 1.0)
-        );
-
-        leftBack.setPower(
-                Range.clip(leftBackPower, -1.0, 1.0)
-        );
-
-        rightFront.setPower(
-                Range.clip(rightFrontPower, -1.0, 1.0)
-        );
-
-        rightBack.setPower(
-                Range.clip(rightBackPower, -1.0, 1.0)
-        );
+        leftFront.setPower(lf / max);
+        leftBack.setPower(lb / max);
+        rightFront.setPower(rf / max);
+        rightBack.setPower(rb / max);
     }
 
     // ============================================================
@@ -478,79 +329,46 @@ public class FTCBiobuzz extends LinearOpMode {
     // ============================================================
 
     private void handleButtons() {
-
-        // -------------------------
         // A = Auto Return
-        // -------------------------
-
         if (gamepad1.a && !lastAutoButton) {
-
             autoReturning = !autoReturning;
-
             if (autoReturning) {
                 stablePositionLoops = 0;
                 replaying = false;
+                recording = false;
             }
         }
-
         lastAutoButton = gamepad1.a;
 
-        // -------------------------
         // B = Servo
-        // -------------------------
-
         if (gamepad1.b && !lastServoButton) {
-
             servosRunning = !servosRunning;
-
-            setServoPairPower(
-                    servo1,
-                    servo2,
-                    servosRunning
-                            ? CLOSE_SERVO_POWER
-                            : 0.0
-            );
+            setServoPairPower(servo1, servo2, servosRunning ? CLOSE_SERVO_POWER : 0.0);
         }
-
         lastServoButton = gamepad1.b;
 
-        // -------------------------
         // X = Recording
-        // -------------------------
-
         if (gamepad1.x && !lastRecordButton) {
-
             recording = !recording;
-
             if (recording) {
-
                 recordedPath.clear();
                 replaying = false;
                 autoReturning = false;
             }
         }
-
         lastRecordButton = gamepad1.x;
 
-        // -------------------------
         // Y = Reverse Replay
-        // -------------------------
-
         if (gamepad1.y && !lastReplayButton) {
-
             if (!recordedPath.isEmpty()) {
-
                 replaying = !replaying;
                 recording = false;
                 autoReturning = false;
-
                 if (replaying) {
-                    replayIndex =
-                            recordedPath.size() - 1;
+                    replayIndex = recordedPath.size() - 1;
                 }
             }
         }
-
         lastReplayButton = gamepad1.y;
     }
 
@@ -559,127 +377,34 @@ public class FTCBiobuzz extends LinearOpMode {
     // ============================================================
 
     private boolean handleAprilTags() {
-
-        HuskyLens.Block[] blocks =
-                huskyLens.blocks();
-
-        boolean tag4Visible = false;
-        boolean tag5Visible = false;
-
-        for (HuskyLens.Block block : blocks) {
-
-            if (block.id == TAG_FORWARD_ID) {
-                tag4Visible = true;
-            }
-
-            if (block.id == TAG_TURN_ID) {
-                tag5Visible = true;
-            }
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        boolean tag4 = false, tag5 = false;
+        for (HuskyLens.Block b : blocks) {
+            if (b.id == TAG_FORWARD_ID) tag4 = true;
+            if (b.id == TAG_TURN_ID) tag5 = true;
         }
 
-        // -------------------------
-        // TAG 5 = TURN
-        // -------------------------
-
-        if (tag5Visible) {
-
-            if (!tag5Turning) {
-
-                tag5Turning = true;
-                tagActionTimer.reset();
-            }
-
-            double elapsed =
-                    tagActionTimer.seconds();
-
-            if (elapsed < TAG_TURN_TIME_SECONDS) {
-
-                applyDriveCommand(
-                        0.0,
-                        0.0,
-                        TAG_TURN_POWER
-                );
-
-            } else {
-
-                applyDriveCommand(
-                        0.0,
-                        0.0,
-                        0.0
-                );
-            }
-
+        if (tag5) {
+            if (!tag5Turning) { tag5Turning = true; tagActionTimer.reset(); }
+            if (tagActionTimer.seconds() < TAG_TURN_TIME_SECONDS) applyDriveCommand(0, 0, TAG_TURN_POWER);
+            else applyDriveCommand(0, 0, 0);
             return true;
         }
-
         tag5Turning = false;
 
-        // -------------------------
-        // TAG 4 = FORWARD
-        // -------------------------
-
-        if (tag4Visible) {
-
+        if (tag4) {
             if (!tag4Moving) {
-
                 tag4Moving = true;
-
-                tag4StartX =
-                        pinpoint.getPosX(DistanceUnit.CM);
-
-                tag4StartY =
-                        pinpoint.getPosY(DistanceUnit.CM);
-
+                tag4StartX = pinpoint.getPosX(DistanceUnit.CM);
+                tag4StartY = pinpoint.getPosY(DistanceUnit.CM);
                 tagActionTimer.reset();
             }
-
-            double currentX =
-                    pinpoint.getPosX(DistanceUnit.CM);
-
-            double currentY =
-                    pinpoint.getPosY(DistanceUnit.CM);
-
-            double dx =
-                    currentX - tag4StartX;
-
-            double dy =
-                    currentY - tag4StartY;
-
-            double distance =
-                    Math.sqrt(
-                            dx * dx +
-                                    dy * dy
-                    );
-
-            double elapsed =
-                    tagActionTimer.seconds();
-
-            if (
-                    distance < TAG_MOVE_DISTANCE_CM
-                            &&
-                            elapsed < TAG_MOVE_TIMEOUT_SECONDS
-            ) {
-
-                applyDriveCommand(
-                        TAG_MOVE_POWER,
-                        0.0,
-                        0.0
-                );
-
-            } else {
-
-                applyDriveCommand(
-                        0.0,
-                        0.0,
-                        0.0
-                );
-            }
-
+            double dist = Math.hypot(pinpoint.getPosX(DistanceUnit.CM) - tag4StartX, pinpoint.getPosY(DistanceUnit.CM) - tag4StartY);
+            if (dist < TAG_MOVE_DISTANCE_CM && tagActionTimer.seconds() < TAG_MOVE_TIMEOUT_SECONDS) applyDriveCommand(TAG_MOVE_POWER, 0, 0);
+            else applyDriveCommand(0, 0, 0);
             return true;
         }
-
         tag4Moving = false;
-
         return false;
     }
 
@@ -688,428 +413,70 @@ public class FTCBiobuzz extends LinearOpMode {
     // ============================================================
 
     private DriveCommand calculateAutoReturn() {
+        double curX = pinpoint.getPosX(DistanceUnit.CM);
+        double curY = pinpoint.getPosY(DistanceUnit.CM);
+        double head = pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS);
 
-        double currentX =
-                pinpoint.getPosX(DistanceUnit.CM);
+        double errX = TARGET_X_CM - curX;
+        double errY = TARGET_Y_CM - curY;
+        double dist = Math.hypot(errX, errY);
 
-        double currentY =
-                pinpoint.getPosY(DistanceUnit.CM);
-
-        double heading =
-                pinpoint.getHeading(
-                        UnnormalizedAngleUnit.RADIANS
-                );
-
-        double errorX =
-                TARGET_X_CM - currentX;
-
-        double errorY =
-                TARGET_Y_CM - currentY;
-
-        double distance =
-                Math.sqrt(
-                        errorX * errorX +
-                                errorY * errorY
-                );
-
-        if (distance <= POSITION_TOLERANCE_CM) {
-
-            stablePositionLoops++;
-
-            if (
-                    stablePositionLoops
-                            >= STABLE_LOOPS_REQUIRED
-            ) {
-
-                autoReturning = false;
-
-                return new DriveCommand(
-                        0.0,
-                        0.0,
-                        0.0
-                );
-            }
-
-            return new DriveCommand(
-                    0.0,
-                    0.0,
-                    0.0
-            );
+        if (dist <= POSITION_TOLERANCE_CM) {
+            if (++stablePositionLoops >= STABLE_LOOPS_REQUIRED) autoReturning = false;
+            return new DriveCommand(0, 0, 0);
         }
-
         stablePositionLoops = 0;
 
-        // Field-to-robot transformation
+        double cos = Math.cos(head);
+        double sin = Math.sin(head);
+        double robotFwd = errX * cos + errY * sin;
+        double robotStr = -errX * sin + errY * cos;
 
-        double cos =
-                Math.cos(heading);
+        double max = (dist <= NEAR_TARGET_RADIUS_CM) ? MAX_AUTO_TRANSLATION_NEAR : MAX_AUTO_TRANSLATION_FAR;
+        double fwd = Range.clip(robotFwd * POSITION_KP, -max, max);
+        double str = Range.clip(robotStr * POSITION_KP, -max, max);
 
-        double sin =
-                Math.sin(heading);
-
-        double robotForward =
-                errorY * cos +
-                        errorX * sin;
-
-        double robotStrafe =
-                -errorY * sin +
-                        errorX * cos;
-
-        double forward =
-                robotForward * POSITION_KP;
-
-        double strafe =
-                robotStrafe * POSITION_KP;
-
-        double maxTranslation;
-
-        if (
-                distance
-                        <= NEAR_TARGET_RADIUS_CM
-        ) {
-            maxTranslation =
-                    MAX_AUTO_TRANSLATION_NEAR;
-        } else {
-            maxTranslation =
-                    MAX_AUTO_TRANSLATION_FAR;
-        }
-
-        forward = Range.clip(
-                forward,
-                -maxTranslation,
-                maxTranslation
-        );
-
-        strafe = Range.clip(
-                strafe,
-                -maxTranslation,
-                maxTranslation
-        );
-
-        double magnitude =
-                Math.sqrt(
-                        forward * forward +
-                                strafe * strafe
-                );
-
-        if (
-                magnitude > 0.0
-                        &&
-                        magnitude < MIN_AUTO_TRANSLATION
-        ) {
-
-            double scale =
-                    MIN_AUTO_TRANSLATION /
-                            magnitude;
-
-            forward *= scale;
-            strafe *= scale;
-
-            magnitude =
-                    Math.sqrt(
-                            forward * forward +
-                                    strafe * strafe
-                    );
-
-            if (magnitude > maxTranslation) {
-
-                double maxScale =
-                        maxTranslation /
-                                magnitude;
-
-                forward *= maxScale;
-                strafe *= maxScale;
-            }
-        }
-
-        double turn = 0.0;
-
-        return new DriveCommand(
-                forward,
-                strafe,
-                turn
-        );
+        return new DriveCommand(fwd, str, 0);
     }
 
     // ============================================================
-    // RECORDING
+    // RECORDING / REPLAY
     // ============================================================
 
-    private void recordCommand(
-            DriveCommand command
-    ) {
-
-        if (
-                recordedPath.size()
-                        >= MAX_RECORDING_SAMPLES
-        ) {
-            recording = false;
-            return;
-        }
-
-        recordedPath.add(
-                new DriveCommand(
-                        command.forward,
-                        command.strafe,
-                        command.turn
-                )
-        );
+    private void recordCommand(DriveCommand command) {
+        if (recordedPath.size() < MAX_RECORDING_SAMPLES)
+            recordedPath.add(new DriveCommand(command.forward, command.strafe, command.turn));
+        else recording = false;
     }
-
-    // ============================================================
-    // REPLAY
-    // ============================================================
 
     private void playRecordedPath() {
-
-        if (
-                recordedPath.isEmpty()
-                        ||
-                        replayIndex < 0
-                        ||
-                        replayIndex >= recordedPath.size()
-        ) {
-
+        if (recordedPath.isEmpty() || replayIndex < 0) {
             replaying = false;
-
-            applyDriveCommand(
-                    0.0,
-                    0.0,
-                    0.0
-            );
-
+            applyDriveCommand(0, 0, 0);
             return;
         }
-
-        DriveCommand original =
-                recordedPath.get(replayIndex);
-
-        double forward =
-                -original.forward;
-
-        double strafe =
-                -original.strafe;
-
-        double turn =
-                -original.turn;
-
-        applyDriveCommand(
-                forward,
-                strafe,
-                turn
-        );
-
-        replayIndex--;
-
-        if (replayIndex < 0) {
-
-            replaying = false;
-
-            applyDriveCommand(
-                    0.0,
-                    0.0,
-                    0.0
-            );
-        }
+        DriveCommand cmd = recordedPath.get(replayIndex--);
+        applyDriveCommand(-cmd.forward, -cmd.strafe, -cmd.turn);
     }
 
-    // ============================================================
-    // SERVO
-    // ============================================================
-
-    private void setServoPairPower(
-            CRServo servo1,
-            CRServo servo2,
-            double power
-    ) {
-
-        servo1.setPower(power);
-        servo2.setPower(-power);
+    private void setServoPairPower(CRServo s1, CRServo s2, double p) {
+        s1.setPower(p);
+        s2.setPower(-p);
     }
 
-    // ============================================================
-    // DEADZONE
-    // ============================================================
-
-    private double applyDeadzone(
-            double value
-    ) {
-
-        if (
-                Math.abs(value)
-                        < DRIVE_DEADZONE
-        ) {
-            return 0.0;
-        }
-
-        return value;
+    private double applyDeadzone(double v) {
+        return (Math.abs(v) < DRIVE_DEADZONE) ? 0.0 : v;
     }
-
-    // ============================================================
-    // TELEMETRY
-    // ============================================================
 
     private void updateTelemetry() {
-
-        telemetry.addLine(
-                "===== TESTING 2027 ====="
-        );
-
-        telemetry.addLine(
-                "FIELD ORIENTED: ON"
-        );
-
-        telemetry.addLine(
-                "Left Y  = Forward / Back"
-        );
-
-        telemetry.addLine(
-                "Right Y = Strafe"
-        );
-
-        telemetry.addLine(
-                "Right X = Turn"
-        );
-
-        telemetry.addLine("");
-
-        telemetry.addData(
-                "Servo",
-                servosRunning
-                        ? "RUNNING"
-                        : "STOPPED"
-        );
-
-        telemetry.addData(
-                "Recording",
-                recording
-        );
-
-        telemetry.addData(
-                "Recorded Samples",
-                recordedPath.size()
-        );
-
-        telemetry.addData(
-                "Replay",
-                replaying
-        );
-
-        telemetry.addData(
-                "Auto Return",
-                autoReturning
-        );
-
-        // -------------------------
-        // Pinpoint
-        // -------------------------
-
-        if (
-                pinpoint.getDeviceStatus()
-                        ==
-                        GoBildaPinpointDriver.DeviceStatus.READY
-        ) {
-
-            telemetry.addData(
-                    "X (cm)",
-                    "%.2f",
-                    pinpoint.getPosX(
-                            DistanceUnit.CM
-                    )
-            );
-
-            telemetry.addData(
-                    "Y (cm)",
-                    "%.2f",
-                    pinpoint.getPosY(
-                            DistanceUnit.CM
-                    )
-            );
-
-            telemetry.addData(
-                    "Heading (deg)",
-                    "%.1f",
-                    Math.toDegrees(
-                            pinpoint.getHeading(
-                                    UnnormalizedAngleUnit.RADIANS
-                            )
-                    )
-            );
-
-        } else {
-
-            telemetry.addData(
-                    "Odometry",
-                    pinpoint.getDeviceStatus()
-            );
-        }
-
-        // -------------------------
-        // Motor powers
-        // -------------------------
-
-        telemetry.addData(
-                "LF",
-                "%.2f",
-                leftFront.getPower()
-        );
-
-        telemetry.addData(
-                "LB",
-                "%.2f",
-                leftBack.getPower()
-        );
-
-        telemetry.addData(
-                "RF",
-                "%.2f",
-                rightFront.getPower()
-        );
-
-        telemetry.addData(
-                "RB",
-                "%.2f",
-                rightBack.getPower()
-        );
-
-        telemetry.addLine("");
-
-        telemetry.addLine(
-                "AprilTag 4 = FORWARD"
-        );
-
-        telemetry.addLine(
-                "AprilTag 5 = TURN"
-        );
-
-        telemetry.addData(
-                "Tag 4 Moving",
-                tag4Moving
-        );
-
-        telemetry.addData(
-                "Tag 5 Turning",
-                tag5Turning
-        );
-
+        telemetry.addData("Status", autoReturning ? "Auto Returning" : (replaying ? "Replaying" : (recording ? "Recording" : "TeleOp")));
+        telemetry.addData("Pos (CM)", "X:%.1f Y:%.1f H:%.1f", pinpoint.getPosX(DistanceUnit.CM), pinpoint.getPosY(DistanceUnit.CM), Math.toDegrees(pinpoint.getHeading(UnnormalizedAngleUnit.RADIANS)));
+        telemetry.addData("Recording", "%b (%d samples)", recording, recordedPath.size());
         telemetry.update();
     }
 
-    // ============================================================
-    // STOP
-    // ============================================================
-
     private void stopRobot() {
-
-        leftFront.setPower(0.0);
-        leftBack.setPower(0.0);
-        rightFront.setPower(0.0);
-        rightBack.setPower(0.0);
-
-        setServoPairPower(
-                servo1,
-                servo2,
-                0.0
-        );
+        applyDriveCommand(0, 0, 0);
+        setServoPairPower(servo1, servo2, 0);
     }
 }
